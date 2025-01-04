@@ -6,21 +6,37 @@ use glam::Vec2;
 
 use crate::{
     collision::{Collides, Collision},
-    motion::Motion,
+    motion::{Motion, Movable, Point},
 };
 
-pub struct MovingAabb {
-    aabb: Aabb,
-    delta: Vec2,
+pub trait AabbExt {
+    fn corners(&self) -> [Point; 4];
 }
 
-impl Collides<Aabb> for MovingAabb {
+impl AabbExt for Aabb {
+    fn corners(&self) -> [Point; 4] {
+        [
+            self.min,
+            self.min + self.half_size().y,
+            self.max,
+            self.min + self.half_size().x,
+        ]
+    }
+}
+
+impl Movable for Aabb {
+    fn position(&self) -> Vec2 {
+        self.center()
+    }
+}
+
+impl Collides<Aabb> for Motion<Aabb> {
     fn collision(&self, other: &Aabb) -> Option<Collision> {
         let mut min_collision: Option<Collision> = None;
         let mut min_distance = f32::INFINITY;
-        for corner in self.aabb.corners() {
+        for corner in self.object.corners() {
             let motion = Motion {
-                pos_0: corner,
+                object: corner,
                 delta: self.delta,
             };
             if let Some(collision) = motion.collision(other) {
@@ -35,18 +51,24 @@ impl Collides<Aabb> for MovingAabb {
     }
 }
 
-pub trait AabbExt {
-    fn corners(&self) -> [Vec2; 4];
-}
-
-impl AabbExt for Aabb {
-    fn corners(&self) -> [Vec2; 4] {
-        [
-            self.min,
-            self.min + self.half_size().y,
-            self.max,
-            self.min + self.half_size().x,
-        ]
+impl Collides<Motion<Aabb>> for Motion<Aabb> {
+    fn collision(&self, other: &Motion<Aabb>) -> Option<Collision> {
+        let mut min_collision: Option<Collision> = None;
+        let mut min_distance = f32::INFINITY;
+        for corner in self.object.corners() {
+            let motion = Motion {
+                object: corner,
+                delta: self.delta,
+            };
+            if let Some(collision) = motion.collision(other) {
+                let distance = collision.position.distance(corner);
+                if distance < min_distance {
+                    min_collision = Some(collision);
+                    min_distance = distance;
+                }
+            }
+        }
+        return min_collision;
     }
 }
 
@@ -58,8 +80,8 @@ mod tests {
 
     #[test]
     fn test_maabb_aabb_collision() {
-        let maabb = MovingAabb {
-            aabb: Aabb {
+        let maabb = Motion {
+            object: Aabb {
                 min: Vec2::ZERO,
                 max: Vec2::ONE,
             },
@@ -79,8 +101,8 @@ mod tests {
 
     #[test]
     fn test_maabb_aabb_non_collision() {
-        let maabb = MovingAabb {
-            aabb: Aabb {
+        let maabb = Motion {
+            object: Aabb {
                 min: Vec2::ZERO,
                 max: Vec2::ONE,
             },
