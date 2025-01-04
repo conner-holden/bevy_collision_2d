@@ -1,0 +1,9 @@
+[package]
+name = "rs-bevy-2d-collision"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy_math = "0.15.1"
+bitflags = "2.6.0"
+glam = "0.29.2"
