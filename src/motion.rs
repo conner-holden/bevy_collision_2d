@@ -1,7 +1,9 @@
-use bevy_math::bounding::Aabb2d as Aabb;
 use glam::{IVec2, Vec2};
 
-use crate::intersection::{Intersection, Intersects};
+use crate::{
+    aabb::Aabb,
+    collision::{Collides, Collision},
+};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 /// An object's position and displacement
@@ -34,8 +36,8 @@ impl Motion {
     }
 }
 
-impl Intersects<Motion> for Motion {
-    fn intersection(&self, other: &Motion) -> Option<Intersection> {
+impl Collides<Motion> for Motion {
+    fn collision(&self, other: &Motion) -> Option<Collision> {
         let cross = self.delta.perp_dot(other.delta);
         if cross == 0.0 {
             return None; // Lines are parallel or collinear
@@ -46,20 +48,20 @@ impl Intersects<Motion> for Motion {
         let self_ratio = pos_displacement.perp_dot(other.delta) / cross;
         let other_ratio = pos_displacement.perp_dot(self.delta) / cross;
 
-        // Check if the intersection point lies on both line segments
+        // Check if the collision point lies on both line segments
         if self_ratio >= 0.0 && self_ratio <= 1.0 && other_ratio >= 0.0 && other_ratio <= 1.0 {
-            Some(Intersection {
+            Some(Collision {
                 position: self.scale(self_ratio).pos_f(),
                 ..Default::default()
             })
         } else {
-            None // No intersection within the line segments
+            None // No collision within the line segments
         }
     }
 }
 
-impl Intersects<Aabb> for Motion {
-    fn intersection(&self, aabb: &Aabb) -> Option<Intersection> {
+impl Collides<Aabb> for Motion {
+    fn collision(&self, aabb: &Aabb) -> Option<Collision> {
         // Calculate the inverse of the displacement to avoid repeated divisions
         let inv_displacement = Vec2::new(1.0 / self.delta.x, 1.0 / self.delta.y);
 
@@ -75,22 +77,22 @@ impl Intersects<Aabb> for Motion {
         let t_entry = t_near.x.max(t_near.y);
         let t_exit = t_far.x.min(t_far.y);
 
-        // If the line misses the AABB or the intersection is outside the line segment, return None
+        // If the line misses the AABB or the collision is outside the line segment, return None
         if t_entry > t_exit || t_exit < 0.0 || t_entry > 1.0 {
             return None;
         }
 
-        // Determine the intersection side based on the t_entry axis
+        // Determine the collision side based on the t_entry axis
         let normal = if t_entry == t_near.x {
             Some(IVec2::new(-self.delta.x.signum() as i32, 0))
         } else {
             Some(IVec2::new(0, -self.delta.y.signum() as i32))
         };
 
-        // Compute the intersection point
+        // Compute the collision point
         let position = self.scale(t_entry).pos_f();
 
-        Some(Intersection { position, normal })
+        Some(Collision { position, normal })
     }
 }
 
@@ -99,11 +101,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_motion_motion_intersection() {
+    fn test_motion_motion_collision() {
         let motion_1 = Motion::new(Vec2::ZERO, Vec2::ONE);
         let motion_2 = Motion::new(Vec2::new(0.5, 0.), Vec2::new(0., 1.));
-        let actual = motion_1.intersection(&motion_2);
-        let expected = Some(Intersection {
+        let actual = motion_1.collision(&motion_2);
+        let expected = Some(Collision {
             position: Vec2::splat(0.5),
             ..Default::default()
         });
@@ -111,23 +113,23 @@ mod tests {
     }
 
     #[test]
-    fn test_motion_motion_non_intersection() {
+    fn test_motion_motion_non_collision() {
         let motion_1 = Motion::new(Vec2::ZERO, Vec2::ONE);
         let motion_2 = Motion::new(Vec2::new(0.5, 0.), Vec2::ONE);
-        let actual = motion_1.intersection(&motion_2);
+        let actual = motion_1.collision(&motion_2);
         let expected = None;
         assert_eq!(actual, expected);
     }
 
     #[test]
-    fn test_motion_aabb_intersection() {
+    fn test_motion_aabb_collision() {
         let motion = Motion::new(Vec2::ZERO, Vec2::ONE);
         let aabb = Aabb {
             min: Vec2::new(0.5, 0.),
             max: Vec2::new(1.5, 1.),
         };
-        let actual = motion.intersection(&aabb);
-        let expected = Some(Intersection {
+        let actual = motion.collision(&aabb);
+        let expected = Some(Collision {
             position: Vec2::splat(0.5),
             normal: Some(-IVec2::X),
         });
@@ -135,13 +137,13 @@ mod tests {
     }
 
     #[test]
-    fn test_motion_aabb_non_intersection() {
+    fn test_motion_aabb_non_collision() {
         let motion = Motion::new(Vec2::ZERO, Vec2::ONE);
         let aabb = Aabb {
             min: Vec2::new(0.5, 0.),
             max: Vec2::new(1.5, 0.25),
         };
-        let actual = motion.intersection(&aabb);
+        let actual = motion.collision(&aabb);
         let expected = None;
         assert_eq!(actual, expected);
     }
