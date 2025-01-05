@@ -51,27 +51,6 @@ impl Collides<Aabb> for Motion<Aabb> {
     }
 }
 
-impl Collides<Motion<Aabb>> for Motion<Aabb> {
-    fn collision(&self, other: &Motion<Aabb>) -> Option<Collision> {
-        let mut min_collision: Option<Collision> = None;
-        let mut min_distance = f32::INFINITY;
-        for corner in self.object.corners() {
-            let motion = Motion {
-                object: corner,
-                delta: self.delta,
-            };
-            if let Some(collision) = motion.collision(other) {
-                let distance = collision.position.distance(corner);
-                if distance < min_distance {
-                    min_collision = Some(collision);
-                    min_distance = distance;
-                }
-            }
-        }
-        return min_collision;
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use glam::IVec2;
