@@ -1,0 +1,15 @@
+use bevy_ecs::{entity::Entity, schedule::SystemSet, system::Query};
+
+use crate::kinematics::KinematicBody;
+
+#[derive(SystemSet, Hash, Debug, Eq, PartialEq, Clone, Copy)]
+pub enum Kinematics {
+    Motion,
+    Collision,
+    Effect,
+}
+
+pub fn detect_collisions<Object: Send + Sync + 'static>(
+    _query: Query<(Entity, &KinematicBody<Object>)>,
+) {
+}

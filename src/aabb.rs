@@ -6,7 +6,7 @@ use glam::Vec2;
 
 use crate::{
     collision::{Collides, Collision},
-    motion::{Motion, Movable},
+    kinematics::KinematicBody,
     point::Point,
 };
 
@@ -25,23 +25,24 @@ impl AabbExt for Aabb {
     }
 }
 
-impl Movable for Aabb {
-    fn position(&self) -> Vec2 {
-        self.center()
-    }
-}
-
-impl Collides<Aabb> for Motion<Aabb> {
-    fn collision(&self, other: &Aabb) -> Option<Collision> {
+impl Collides<KinematicBody<Aabb>> for KinematicBody<Aabb> {
+    fn collision(&self, other: &KinematicBody<Aabb>) -> Option<Collision> {
+        assert_eq!(
+            other.motion,
+            Vec2::ZERO,
+            "Only one moving AABB is currently supported"
+        );
         let mut min_collision: Option<Collision> = None;
         let mut min_distance = f32::INFINITY;
         for corner in self.object.corners() {
-            let motion = Motion {
-                object: corner,
-                delta: self.delta,
+            let point = KinematicBody {
+                object: corner + self.position,
+                position: corner + self.position,
+                motion: self.motion,
+                ..Default::default()
             };
-            if let Some(collision) = motion.collision(other) {
-                let distance = collision.position.distance(corner);
+            if let Some(collision) = point.collision(other) {
+                let distance = collision.position.distance(corner + self.position);
                 if distance < min_distance {
                     min_collision = Some(collision);
                     min_distance = distance;
@@ -54,24 +55,35 @@ impl Collides<Aabb> for Motion<Aabb> {
 
 #[cfg(test)]
 mod tests {
-    use glam::IVec2;
+    use glam::{IVec2, Vec2};
+
+    use crate::kinematics::Flags;
 
     use super::*;
 
     #[test]
     fn test_moving_aabb_aabb_collision() {
-        let maabb = Motion {
+        let aabb_1 = KinematicBody {
             object: Aabb {
                 min: Vec2::ZERO,
                 max: Vec2::ONE,
             },
-            delta: Vec2::ONE,
+            position: Vec2::ZERO,
+            motion: Vec2::ONE,
+            mask: Flags::A,
+            layer: Flags::A,
         };
-        let aabb = Aabb {
-            min: Vec2::new(1.5, 0.75),
-            max: Vec2::new(2.5, 1.75),
+        let aabb_2 = KinematicBody {
+            object: Aabb {
+                min: Vec2::ZERO,
+                max: Vec2::ONE,
+            },
+            position: Vec2::new(1.5, 0.75),
+            motion: Vec2::ZERO,
+            mask: Flags::A,
+            layer: Flags::A,
         };
-        let actual = maabb.collision(&aabb);
+        let actual = aabb_1.collision(&aabb_2);
         let expected = Some(Collision {
             position: Vec2::new(1.5, 1.5),
             normal: Some(-IVec2::X),
@@ -81,18 +93,27 @@ mod tests {
 
     #[test]
     fn test_moving_aabb_aabb_non_collision() {
-        let maabb = Motion {
+        let aabb_1 = KinematicBody {
             object: Aabb {
                 min: Vec2::ZERO,
                 max: Vec2::ONE,
             },
-            delta: Vec2::ONE,
+            position: Vec2::ZERO,
+            motion: Vec2::ONE,
+            mask: Flags::A,
+            layer: Flags::A,
         };
-        let aabb = Aabb {
-            min: Vec2::new(2.5, 0.75),
-            max: Vec2::new(3.5, 1.75),
+        let aabb_2 = KinematicBody {
+            object: Aabb {
+                min: Vec2::ZERO,
+                max: Vec2::ONE,
+            },
+            position: Vec2::new(2.5, 0.75),
+            motion: Vec2::ZERO,
+            mask: Flags::A,
+            layer: Flags::A,
         };
-        let actual = maabb.collision(&aabb);
+        let actual = aabb_1.collision(&aabb_2);
         let expected = None;
         assert_eq!(actual, expected);
     }

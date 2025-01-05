@@ -4,9 +4,9 @@ A simple Bevy library designed for 2D kinematic-/rigid-body collision. Support i
 
 ### Supported Collisions
 
-| Collider 1      | Collider 2      | Supported |
-| --------------- | --------------- | --------- |
-| `Motion<Point>` | `Motion<Point>` | &#x2611;  |
-| `Motion<Point>` | `Aabb`          | &#x2611;  |
-| `Motion<Point>` | `Motion<Aabb>`  | &#x2610;  |
-| `Motion<Aabb>`  | `Motion<Aabb>`  | &#x2610;  |
+| Body 1                 | Body 2                         | Supported |
+| ---------------------- | ------------------------------ | --------- |
+| `KinematicBody<Point>` | `KinematicBody<Point>`         | &#x2611;  |
+| `KinematicBody<Point>` | `KinematicBody<Aabb>`          | &#x2611;  |
+| `KinematicBody<Point>` | `KinematicBody<Aabb>` (moving) | &#x2610;  |
+| `KinematicBody<Aabb>`  | `KinematicBody<Aabb>` (moving) | &#x2610;  |
