@@ -27,7 +27,7 @@ pub struct Collision {
 
 #[derive(Component, Clone, Default)]
 pub struct KinematicBody {
-    pub dimensions: Vec2,
+    pub size: Option<Vec2>,
     pub position: Vec2,
     pub motion: Vec2,
     pub mask: Flags,
@@ -43,9 +43,9 @@ impl KinematicBody {
         }
     }
 
-    pub fn aabb(dimensions: Vec2, position: Vec2, motion: Vec2) -> Self {
+    pub fn aabb(size: Vec2, position: Vec2, motion: Vec2) -> Self {
         Self {
-            dimensions,
+            size: Some(size),
             position,
             motion,
             ..Default::default()
@@ -53,9 +53,9 @@ impl KinematicBody {
     }
 
     pub fn collision(&self, other: &Self) -> Option<Collision> {
-        let result = match (self.dimensions, other.dimensions) {
+        let result = match (self.size, other.size) {
             // Point-point collision
-            (Vec2::ZERO, Vec2::ZERO) => {
+            (None, None) => {
                 let cross = self.motion.perp_dot(other.motion);
                 if cross == 0.0 {
                     return None; // Lines are parallel or collinear
@@ -81,13 +81,13 @@ impl KinematicBody {
                 }
             }
             // Point-AABB collision
-            (Vec2::ZERO, _) => {
+            (None, Some(other_size)) => {
                 // Calculate the inverse of the displacement to avoid repeated divisions
                 let inv_displacement = Vec2::new(1.0 / self.motion.x, 1.0 / self.motion.y);
 
                 // Compute the t-values for intersections with the AABB's boundaries
                 let t_min = (other.position - self.position) * inv_displacement;
-                let t_max = (other.position + other.dimensions - self.position) * inv_displacement;
+                let t_max = (other.position + other_size - self.position) * inv_displacement;
 
                 // Determine the near and far t-values for each axis
                 let t_near = t_min.min(t_max);
@@ -115,7 +115,7 @@ impl KinematicBody {
                 Some(Collision { position, normal })
             }
             // AABB-AABB collision
-            (_, _) => {
+            (Some(self_size), Some(_other_size)) => {
                 assert_eq!(
                     other.motion,
                     Vec2::ZERO,
@@ -125,9 +125,9 @@ impl KinematicBody {
                 let mut min_distance = f32::INFINITY;
                 let corners = [
                     self.position,
-                    self.position + self.dimensions.y,
-                    self.position + self.dimensions,
-                    self.position + self.dimensions.x,
+                    self.position + self_size.y,
+                    self.position + self_size,
+                    self.position + self_size.x,
                 ];
                 for corner in corners {
                     let point = KinematicBody::point(corner, self.motion);
@@ -141,6 +141,8 @@ impl KinematicBody {
                 }
                 return min_collision;
             }
+            // TODO: AABB-point collision
+            _ => None,
         };
         return result;
     }
