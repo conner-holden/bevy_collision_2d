@@ -6,7 +6,8 @@ use glam::Vec2;
 
 use crate::{
     collision::{Collides, Collision},
-    motion::{Motion, Movable, Point},
+    motion::{Motion, Movable},
+    point::Point,
 };
 
 pub trait AabbExt {
@@ -58,7 +59,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_maabb_aabb_collision() {
+    fn test_moving_aabb_aabb_collision() {
         let maabb = Motion {
             object: Aabb {
                 min: Vec2::ZERO,
@@ -79,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn test_maabb_aabb_non_collision() {
+    fn test_moving_aabb_aabb_non_collision() {
         let maabb = Motion {
             object: Aabb {
                 min: Vec2::ZERO,
