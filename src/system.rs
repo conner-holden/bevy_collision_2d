@@ -9,7 +9,4 @@ pub enum Kinematics {
     Effect,
 }
 
-pub fn detect_collisions<Object: Send + Sync + 'static>(
-    _query: Query<(Entity, &KinematicBody<Object>)>,
-) {
-}
+pub fn detect_collisions(_query: Query<(Entity, &KinematicBody)>) {}
