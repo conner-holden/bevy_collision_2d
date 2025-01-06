@@ -714,9 +714,11 @@ dependencies = [
 name = "rs-bevy-2d-collision"
 version = "0.1.0"
 dependencies = [
+ "bevy_app",
  "bevy_ecs",
  "bevy_math",
  "bevy_transform",
+ "bevy_utils",
  "bitflags",
  "glam",
 ]

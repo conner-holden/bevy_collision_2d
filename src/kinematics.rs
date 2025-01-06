@@ -25,7 +25,7 @@ pub struct Collision {
     pub normal: Option<IVec2>,
 }
 
-#[derive(Component, Clone, Default)]
+#[derive(Component, Clone, Debug, Default)]
 pub struct KinematicBody {
     pub size: Option<Vec2>,
     pub position: Vec2,
