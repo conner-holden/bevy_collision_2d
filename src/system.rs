@@ -50,11 +50,8 @@ pub fn detect_collisions(query: Query<(Entity, &KinematicBody)>) -> Vec<(Entity,
                 if e1 == e2 {
                     return;
                 }
-                println!("k1: {:?}", k1);
-                println!("k2: {:?}", k2);
                 if let Some(collision) = k1.collision(k2) {
-                    println!("collision: {:?}", collision);
-                    let motion_1 = collision.position - k1.position;
+                    let motion_1 = collision.motion;
                     let distance_1 = motion_1.length();
                     if distance_1 < min_distance_1 {
                         min_distance_1 = distance_1;

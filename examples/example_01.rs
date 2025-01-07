@@ -48,8 +48,10 @@ pub fn setup(mut commands: Commands) {
 
 pub fn movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>,
     mut query: Query<&mut KinematicBody, With<Player>>,
 ) {
+    let t = time.delta_secs();
     for mut k in &mut query {
         let up = keyboard_input.any_pressed([KeyCode::KeyW, KeyCode::ArrowUp]);
         let down = keyboard_input.any_pressed([KeyCode::KeyS, KeyCode::ArrowDown]);
@@ -62,8 +64,9 @@ pub fn movement(
         let mut move_delta = Vec2::new(x_axis as f32, y_axis as f32);
         if move_delta != Vec2::ZERO {
             move_delta /= move_delta.length();
+            move_delta *= t;
         }
 
-        k.motion = move_delta * 10.;
+        k.motion = move_delta * 200.;
     }
 }
