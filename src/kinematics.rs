@@ -116,19 +116,18 @@ impl KinematicBody {
             }
             // AABB-AABB collision
             (Some(self_size), Some(_other_size)) => {
-                assert_eq!(
-                    other.motion,
-                    Vec2::ZERO,
-                    "Only one moving AABB is currently supported"
-                );
+                if other.motion != Vec2::ZERO {
+                    return None;
+                }
                 let mut min_collision: Option<Collision> = None;
                 let mut min_distance = f32::INFINITY;
                 let corners = [
                     self.position,
-                    self.position + self_size.y,
+                    self.position + Vec2::ZERO.with_y(self_size.y),
                     self.position + self_size,
-                    self.position + self_size.x,
+                    self.position + Vec2::ZERO.with_x(self_size.x),
                 ];
+                println!("corners: {:?}", corners);
                 for corner in corners {
                     let point = KinematicBody::point(corner, self.motion);
                     if let Some(collision) = point.collision(other) {

@@ -50,8 +50,12 @@ impl<T: std::fmt::Debug> ChunkMap<T> {
     }
 
     pub fn insert(&mut self, position: Vec2, value: T) {
+        println!(
+            "inserting chunk: {:?}",
+            ChunkId::from(position / Vec2::splat(100.))
+        );
         self.map
-            .entry(ChunkId::from(position))
+            .entry(ChunkId::from(position / Vec2::splat(100.)))
             .or_insert_with(Vec::new)
             .push(value);
     }

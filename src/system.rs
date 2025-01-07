@@ -39,23 +39,31 @@ pub fn detect_collisions(query: Query<(Entity, &KinematicBody)>) -> Vec<(Entity,
 
     let mut solutions = Vec::new();
 
-    while let Some((id1, (e1, k1))) = chunks.pop() {
-        let mut min_motion_1 = k1.motion;
-        if min_motion_1 == Vec2::ZERO {
-            continue;
-        }
-        let mut min_distance_1 = min_motion_1.length();
-        chunks.iter_neighbors(id1, |_id2, (_e2, k2)| {
-            if let Some(collision) = k1.collision(k2) {
-                let motion_1 = collision.position - k1.position;
-                let distance_1 = motion_1.length();
-                if distance_1 < min_distance_1 {
-                    min_distance_1 = distance_1;
-                    min_motion_1 = motion_1;
-                }
+    for (id1, values) in chunks.map.iter() {
+        for (e1, k1) in values.iter() {
+            let mut min_motion_1 = k1.motion;
+            if min_motion_1 == Vec2::ZERO {
+                continue;
             }
-        });
-        solutions.push((e1, min_motion_1))
+            let mut min_distance_1 = min_motion_1.length();
+            chunks.iter_neighbors(*id1, |_id2, (e2, k2)| {
+                if e1 == e2 {
+                    return;
+                }
+                println!("k1: {:?}", k1);
+                println!("k2: {:?}", k2);
+                if let Some(collision) = k1.collision(k2) {
+                    println!("collision: {:?}", collision);
+                    let motion_1 = collision.position - k1.position;
+                    let distance_1 = motion_1.length();
+                    if distance_1 < min_distance_1 {
+                        min_distance_1 = distance_1;
+                        min_motion_1 = motion_1;
+                    }
+                }
+            });
+            solutions.push((*e1, min_motion_1))
+        }
     }
 
     return solutions;

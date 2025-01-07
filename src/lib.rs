@@ -3,5 +3,8 @@ pub mod system;
 pub mod utils;
 
 pub mod prelude {
-    pub use super::kinematics::{Collision, Flags, KinematicBody};
+    pub use super::{
+        kinematics::{Collision, Flags, KinematicBody},
+        system::{CollisionPlugin, Kinematics},
+    };
 }
