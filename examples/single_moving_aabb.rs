@@ -59,6 +59,7 @@ pub struct Player;
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2d::default());
 
+    let position = Vec2::new(PLAYER_POSITION.0 as f32, PLAYER_POSITION.1 as f32) * TILE_SIZE;
     commands.spawn((
         Sprite {
             color: Color::srgb(100., 100., 100.),
@@ -67,11 +68,7 @@ pub fn setup(mut commands: Commands) {
         },
         Transform::default(),
         Player,
-        KinematicBody::aabb(
-            Vec2::splat(TILE_SIZE),
-            Vec2::new(PLAYER_POSITION.0 as f32, PLAYER_POSITION.1 as f32) * TILE_SIZE,
-            Vec2::ZERO,
-        ),
+        KinematicBody::aabb(Vec2::splat(TILE_SIZE), position, Vec2::ZERO),
     ));
 
     for (x, y) in WALL_POSITIONS {

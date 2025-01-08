@@ -14,3 +14,4 @@ glam = "0.29.2"
 
 [dev-dependencies]
 bevy = "0.15.1"
+rand = "0.8.5"
