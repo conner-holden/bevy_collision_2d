@@ -40,18 +40,20 @@ impl Into<Vec2> for ChunkId {
 #[derive(Clone)]
 pub struct ChunkMap<T: std::fmt::Debug> {
     pub map: HashMap<ChunkId, Vec<T>>,
+    pub chunk_size: Vec2,
 }
 
 impl<T: std::fmt::Debug> ChunkMap<T> {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(capacity: usize, chunk_size: f32) -> Self {
         return Self {
             map: HashMap::with_capacity(capacity),
+            chunk_size: Vec2::splat(chunk_size),
         };
     }
 
     pub fn insert(&mut self, position: Vec2, value: T) {
         self.map
-            .entry(ChunkId::from(position / Vec2::splat(100.)))
+            .entry(ChunkId::from(position / self.chunk_size))
             .or_insert_with(Vec::new)
             .push(value);
     }

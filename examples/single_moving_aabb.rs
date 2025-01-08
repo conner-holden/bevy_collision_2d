@@ -2,27 +2,8 @@ use bevy::{prelude::*, window::WindowResolution};
 use bevy_collision_2d::prelude::*;
 use glam::Vec2;
 
-fn main() {
-    let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            resolution: WindowResolution::new(1000., 1000.),
-            title: "Single Moving AABB Example".to_string(),
-            ..default()
-        }),
-        ..default()
-    }))
-    .add_plugins(CollisionPlugin)
-    .add_systems(Startup, setup)
-    .add_systems(Update, movement.in_set(Kinematics::Motion))
-    .run();
-}
-
-#[derive(Component)]
-pub struct Player;
-
 const TILE_SIZE: f32 = 100.;
-const PLAYER_SPEED: f32 = 2.;
+const PLAYER_SPEED: f32 = 3.;
 const PLAYER_POSITION: (i32, i32) = (0, 0);
 const WALL_POSITIONS: [(i32, i32); 27] = [
     (-3, 2),
@@ -54,13 +35,34 @@ const WALL_POSITIONS: [(i32, i32); 27] = [
     (2, 0),
 ];
 
+fn main() {
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            resolution: WindowResolution::new(1000., 1000.),
+            title: "Single Moving AABB Example".to_string(),
+            ..default()
+        }),
+        ..default()
+    }))
+    .add_plugins(CollisionPlugin {
+        chunk_size: TILE_SIZE,
+    })
+    .add_systems(Startup, setup)
+    .add_systems(Update, movement.in_set(Kinematics::Motion))
+    .run();
+}
+
+#[derive(Component)]
+pub struct Player;
+
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2d::default());
 
     commands.spawn((
         Sprite {
             color: Color::srgb(100., 100., 100.),
-            custom_size: Some(Vec2::splat(100.)),
+            custom_size: Some(Vec2::splat(TILE_SIZE)),
             ..Default::default()
         },
         Transform::default(),

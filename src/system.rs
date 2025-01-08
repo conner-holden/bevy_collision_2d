@@ -2,7 +2,7 @@ use bevy_app::{App, Plugin, Update};
 use bevy_ecs::{
     entity::Entity,
     schedule::{IntoSystemConfigs, SystemSet},
-    system::{In, IntoSystem, Query},
+    system::{In, IntoSystem, Query, Res, Resource},
 };
 use bevy_transform::components::Transform;
 use glam::Vec2;
@@ -16,11 +16,27 @@ pub enum Kinematics {
     Effect,
 }
 
-pub struct CollisionPlugin;
+#[derive(Resource)]
+pub struct CollisionConfig {
+    pub chunk_size: f32,
+}
+
+pub struct CollisionPlugin {
+    pub chunk_size: f32,
+}
+
+impl Default for CollisionPlugin {
+    fn default() -> Self {
+        Self { chunk_size: 1. }
+    }
+}
 
 impl Plugin for CollisionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.insert_resource(CollisionConfig {
+            chunk_size: self.chunk_size,
+        })
+        .add_systems(
             Update,
             detect_collisions
                 .pipe(apply_motion)
@@ -30,8 +46,11 @@ impl Plugin for CollisionPlugin {
     }
 }
 
-pub fn detect_collisions(query: Query<(Entity, &KinematicBody)>) -> Vec<(Entity, Vec2)> {
-    let mut chunks = ChunkMap::new(0);
+pub fn detect_collisions(
+    query: Query<(Entity, &KinematicBody)>,
+    config: Res<CollisionConfig>,
+) -> Vec<(Entity, Vec2)> {
+    let mut chunks = ChunkMap::new(0, config.chunk_size);
 
     for (entity, body) in query.iter() {
         chunks.insert(body.position, (entity, body));
