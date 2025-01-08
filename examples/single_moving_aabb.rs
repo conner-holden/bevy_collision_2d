@@ -7,7 +7,7 @@ fn main() {
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             resolution: WindowResolution::new(1000., 1000.),
-            title: "Example 1".to_string(),
+            title: "Single Moving AABB Example".to_string(),
             ..default()
         }),
         ..default()
@@ -21,6 +21,39 @@ fn main() {
 #[derive(Component)]
 pub struct Player;
 
+const TILE_SIZE: f32 = 100.;
+const PLAYER_SPEED: f32 = 2.;
+const PLAYER_POSITION: (i32, i32) = (0, 0);
+const WALL_POSITIONS: [(i32, i32); 27] = [
+    (-3, 2),
+    (-3, 1),
+    (-3, 0),
+    (-3, -1),
+    (-3, -2),
+    (-3, -3),
+    (-2, -3),
+    (-1, -3),
+    (0, -3),
+    (1, -3),
+    (2, -3),
+    (3, -3),
+    (4, -3),
+    (4, -2),
+    (4, -1),
+    (4, 0),
+    (4, 1),
+    (4, 2),
+    (-3, 3),
+    (-2, 3),
+    (-1, 3),
+    (0, 3),
+    (1, 3),
+    (2, 3),
+    (3, 3),
+    (4, 3),
+    (2, 0),
+];
+
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2d::default());
 
@@ -32,18 +65,25 @@ pub fn setup(mut commands: Commands) {
         },
         Transform::default(),
         Player,
-        KinematicBody::aabb(Vec2::splat(100.), Vec2::ZERO, Vec2::ZERO),
+        KinematicBody::aabb(
+            Vec2::splat(TILE_SIZE),
+            Vec2::new(PLAYER_POSITION.0 as f32, PLAYER_POSITION.1 as f32) * TILE_SIZE,
+            Vec2::ZERO,
+        ),
     ));
 
-    commands.spawn((
-        Sprite {
-            color: Color::srgb(0., 0., 0.),
-            custom_size: Some(Vec2::splat(100.)),
-            ..Default::default()
-        },
-        Transform::from_xyz(200., 0., -1.),
-        KinematicBody::aabb(Vec2::splat(100.), Vec2::new(200., 0.), Vec2::ZERO),
-    ));
+    for (x, y) in WALL_POSITIONS {
+        let position = Vec2::new(TILE_SIZE * x as f32, TILE_SIZE * y as f32);
+        commands.spawn((
+            Sprite {
+                color: Color::srgb(0., 0., 0.),
+                custom_size: Some(Vec2::splat(TILE_SIZE)),
+                ..Default::default()
+            },
+            Transform::from_xyz(position.x, position.y, -1.),
+            KinematicBody::aabb(Vec2::splat(TILE_SIZE), position, Vec2::ZERO),
+        ));
+    }
 }
 
 pub fn movement(
@@ -67,6 +107,6 @@ pub fn movement(
             move_delta *= t;
         }
 
-        k.motion = move_delta * 200.;
+        k.motion = move_delta * TILE_SIZE * PLAYER_SPEED;
     }
 }
