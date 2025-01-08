@@ -1,13 +1,16 @@
-use bevy_app::{App, Plugin, Update};
+use bevy_app::{App, Plugin, Startup, Update};
 use bevy_color::Srgba;
 use bevy_ecs::{
     entity::Entity,
     schedule::{IntoSystemConfigs, SystemSet},
-    system::{In, IntoSystem, Query, Res, Resource},
+    system::{Commands, In, IntoSystem, Query, Res, Resource},
 };
 use bevy_gizmos::gizmos::Gizmos;
+use bevy_hierarchy::{BuildChildren, ChildBuild};
 use bevy_math::Isometry2d;
+use bevy_text::{FontStyle, JustifyText, Text2d, TextLayout};
 use bevy_transform::components::Transform;
+use bevy_ui::{widget::Text, AlignItems, FlexDirection, JustifyContent, Node, UiRect, Val};
 use glam::Vec2;
 
 use crate::{kinematics::KinematicBody, utils::chunk_map::ChunkMap};
@@ -54,7 +57,11 @@ impl Plugin for CollisionPlugin {
         );
 
         if self.debug {
-            app.add_systems(Update, draw_debug_rects.after(Kinematics::Effect));
+            app.add_systems(Startup, setup_screen_diagnostics)
+                .add_systems(
+                    Update,
+                    (draw_debug_rects, draw_screen_diagnostics).after(Kinematics::Effect),
+                );
         }
     }
 }
@@ -121,5 +128,23 @@ pub fn draw_debug_rects(query: Query<&KinematicBody>, mut gizmos: Gizmos) {
                 Srgba::RED,
             );
         }
+    }
+}
+
+pub fn setup_screen_diagnostics(mut commands: Commands) {
+    commands.spawn((
+        Node {
+            position_type: bevy_ui::PositionType::Absolute,
+            left: Val::Px(15.),
+            top: Val::Px(15.),
+            ..Default::default()
+        },
+        Text::new("Colliders: 0"),
+    ));
+}
+
+pub fn draw_screen_diagnostics(mut query: Query<&mut Text>, query_k: Query<&KinematicBody>) {
+    for mut text in query.iter_mut() {
+        text.0 = format!("Colliders: {}", query_k.iter().len());
     }
 }

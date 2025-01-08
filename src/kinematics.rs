@@ -139,6 +139,7 @@ impl KinematicBody {
                 // Compute the collision point
                 let motion = t_entry * self.motion;
                 let position = self.position + motion;
+                println!("{:?}", position);
 
                 Some(Collision {
                     motion,
