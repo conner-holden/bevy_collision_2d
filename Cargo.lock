@@ -315,7 +315,9 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_app",
+ "bevy_color",
  "bevy_ecs",
+ "bevy_gizmos",
  "bevy_math",
  "bevy_transform",
  "bevy_utils",

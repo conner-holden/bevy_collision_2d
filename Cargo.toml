@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 bevy_app = "0.15.1"
+bevy_color = "0.15.2"
 bevy_ecs = "0.15.1"
+bevy_gizmos = "0.15.1"
 bevy_math = "0.15.1"
 bevy_transform = "0.15.1"
 bevy_utils = "0.15.1"

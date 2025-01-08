@@ -47,6 +47,7 @@ fn main() {
     }))
     .add_plugins(CollisionPlugin {
         chunk_size: TILE_SIZE,
+        debug: true,
     })
     .add_systems(Startup, setup)
     .add_systems(Update, spawn_projectile)
@@ -72,11 +73,7 @@ pub fn setup(mut commands: Commands) {
                 ..Default::default()
             },
             Transform::from_xyz(position.x, position.y, -1.),
-            KinematicBody::aabb(
-                size,
-                position - Vec2::splat(TILE_SIZE / 2.) + Vec2::splat(10.),
-                Vec2::ZERO,
-            ),
+            KinematicBody::aabb(size, position, Vec2::ZERO),
         ));
     }
 }
@@ -97,7 +94,7 @@ pub fn spawn_projectile(mut commands: Commands) {
         },
         Transform::from_xyz(position.x, position.y, 0.),
         Projectile { direction },
-        KinematicBody::aabb(size, position + direction * size * 2., Vec2::ZERO),
+        KinematicBody::aabb(size, position, Vec2::ZERO),
     ));
 }
 

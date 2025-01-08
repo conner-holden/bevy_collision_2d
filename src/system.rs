@@ -1,9 +1,12 @@
 use bevy_app::{App, Plugin, Update};
+use bevy_color::Srgba;
 use bevy_ecs::{
     entity::Entity,
     schedule::{IntoSystemConfigs, SystemSet},
     system::{In, IntoSystem, Query, Res, Resource},
 };
+use bevy_gizmos::gizmos::Gizmos;
+use bevy_math::Isometry2d;
 use bevy_transform::components::Transform;
 use glam::Vec2;
 
@@ -19,15 +22,20 @@ pub enum Kinematics {
 #[derive(Resource)]
 pub struct CollisionConfig {
     pub chunk_size: f32,
+    pub debug: bool,
 }
 
 pub struct CollisionPlugin {
     pub chunk_size: f32,
+    pub debug: bool,
 }
 
 impl Default for CollisionPlugin {
     fn default() -> Self {
-        Self { chunk_size: 1. }
+        Self {
+            chunk_size: 1.,
+            debug: false,
+        }
     }
 }
 
@@ -35,6 +43,7 @@ impl Plugin for CollisionPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(CollisionConfig {
             chunk_size: self.chunk_size,
+            debug: self.debug,
         })
         .add_systems(
             Update,
@@ -43,6 +52,10 @@ impl Plugin for CollisionPlugin {
                 .after(Kinematics::Motion)
                 .in_set(Kinematics::Collision),
         );
+
+        if self.debug {
+            app.add_systems(Update, draw_debug_rects.after(Kinematics::Effect));
+        }
     }
 }
 
@@ -96,5 +109,17 @@ pub fn apply_motion(
         t.translation += m.extend(0.);
         kb.position = t.translation.truncate();
         kb.motion = Vec2::ZERO;
+    }
+}
+
+pub fn draw_debug_rects(query: Query<&KinematicBody>, mut gizmos: Gizmos) {
+    for k in query.iter() {
+        if let Some(size) = k.size {
+            gizmos.rect_2d(
+                Isometry2d::from_xy(k.position.x, k.position.y),
+                size,
+                Srgba::RED,
+            );
+        }
     }
 }
