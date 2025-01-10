@@ -6,11 +6,8 @@ use bevy_ecs::{
     system::{Commands, In, IntoSystem, Query, Res, Resource},
 };
 use bevy_gizmos::gizmos::Gizmos;
-use bevy_hierarchy::{BuildChildren, ChildBuild};
-use bevy_math::Isometry2d;
-use bevy_text::{FontStyle, JustifyText, Text2d, TextLayout};
 use bevy_transform::components::Transform;
-use bevy_ui::{widget::Text, AlignItems, FlexDirection, JustifyContent, Node, UiRect, Val};
+use bevy_ui::{widget::Text, Node, Val};
 use glam::Vec2;
 
 use crate::{kinematics::KinematicBody, utils::chunk_map::ChunkMap};
@@ -69,6 +66,7 @@ impl Plugin for CollisionPlugin {
 pub fn detect_collisions(
     query: Query<(Entity, &KinematicBody)>,
     config: Res<CollisionConfig>,
+    mut gizmos: Gizmos,
 ) -> Vec<(Entity, Vec2)> {
     let mut chunks = ChunkMap::new(0, config.chunk_size);
 
@@ -90,12 +88,14 @@ pub fn detect_collisions(
                     return;
                 }
                 if let Some(collision) = k1.collision(k2) {
+                    gizmos.circle_2d(collision.position, 5., Srgba::BLUE);
                     let motion_1 = collision.motion;
                     let distance_1 = motion_1.length();
                     if distance_1 < min_distance_1 {
                         min_distance_1 = distance_1;
                         min_motion_1 = motion_1;
                     }
+                    println!("Collision: {:?}, {:?}", e1, collision.position);
                 }
             });
             solutions.push((*e1, min_motion_1))
@@ -122,11 +122,7 @@ pub fn apply_motion(
 pub fn draw_debug_rects(query: Query<&KinematicBody>, mut gizmos: Gizmos) {
     for k in query.iter() {
         if let Some(size) = k.size {
-            gizmos.rect_2d(
-                Isometry2d::from_xy(k.position.x, k.position.y),
-                size,
-                Srgba::RED,
-            );
+            gizmos.rect_2d(k.position, size, Srgba::RED);
         }
     }
 }

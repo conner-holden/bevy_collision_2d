@@ -101,8 +101,10 @@ impl KinematicBody {
                 );
 
                 // Compute the t-values for intersections with the AABB's boundaries
-                let mut t_min = (other.position - self.position) * inv_displacement;
-                let mut t_max = (other.position + other_size - self.position) * inv_displacement;
+                let mut t_min =
+                    (other.position - 0.5 * other_size - self.position) * inv_displacement;
+                let mut t_max =
+                    (other.position + 0.5 * other_size - self.position) * inv_displacement;
 
                 if self.motion.y == 0.0 {
                     if self.position.y >= other.position.y
@@ -139,7 +141,7 @@ impl KinematicBody {
                 // Compute the collision point
                 let motion = t_entry * self.motion;
                 let position = self.position + motion;
-                println!("{:?}", position);
+                // println!("{:?}", position);
 
                 Some(Collision {
                     motion,
@@ -155,10 +157,10 @@ impl KinematicBody {
                 let mut min_collision: Option<Collision> = None;
                 let mut min_distance = f32::INFINITY;
                 let corners = [
-                    self.position,
-                    self.position + Vec2::ZERO.with_y(self_size.y),
-                    self.position + self_size,
-                    self.position + Vec2::ZERO.with_x(self_size.x),
+                    self.position - 0.5 * self_size,
+                    self.position + 0.5 * Vec2::new(-self_size.x, self_size.y),
+                    self.position + 0.5 * self_size,
+                    self.position + 0.5 * Vec2::new(self_size.x, -self_size.y),
                 ];
                 for corner in corners {
                     let point = KinematicBody::point(corner, self.motion);
