@@ -95,7 +95,6 @@ pub fn detect_collisions(
                         min_distance_1 = distance_1;
                         min_motion_1 = motion_1;
                     }
-                    println!("Collision: {:?}, {:?}", e1, collision.position);
                 }
             });
             solutions.push((*e1, min_motion_1))

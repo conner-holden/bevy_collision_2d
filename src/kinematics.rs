@@ -27,6 +27,8 @@ pub struct Collision {
     pub normal: Option<IVec2>,
 }
 
+const CORNERS: [[f32; 2]; 4] = [[-1., -1.], [-1., 1.], [1., 1.], [1., -1.]];
+
 #[derive(Component, Clone, Debug, Default)]
 pub struct KinematicBody {
     pub size: Option<Vec2>,
@@ -51,6 +53,20 @@ impl KinematicBody {
             position,
             motion,
             ..Default::default()
+        }
+    }
+
+    pub fn corners(&self) -> Option<[Vec2; 4]> {
+        if let Some(size) = self.size {
+            let half_size = size * 0.5;
+            return Some([
+                self.position + half_size * Vec2::from(CORNERS[0]),
+                self.position + half_size * Vec2::from(CORNERS[1]),
+                self.position + half_size * Vec2::from(CORNERS[2]),
+                self.position + half_size * Vec2::from(CORNERS[3]),
+            ]);
+        } else {
+            return None;
         }
     }
 
@@ -141,7 +157,6 @@ impl KinematicBody {
                 // Compute the collision point
                 let motion = t_entry * self.motion;
                 let position = self.position + motion;
-                // println!("{:?}", position);
 
                 Some(Collision {
                     motion,
@@ -150,19 +165,13 @@ impl KinematicBody {
                 })
             }
             // AABB-AABB collision
-            (Some(self_size), Some(_other_size)) => {
+            (Some(_), Some(_)) => {
                 if other.motion != Vec2::ZERO {
                     return None;
                 }
                 let mut min_collision: Option<Collision> = None;
                 let mut min_distance = f32::INFINITY;
-                let corners = [
-                    self.position - 0.5 * self_size,
-                    self.position + 0.5 * Vec2::new(-self_size.x, self_size.y),
-                    self.position + 0.5 * self_size,
-                    self.position + 0.5 * Vec2::new(self_size.x, -self_size.y),
-                ];
-                for corner in corners {
+                for corner in self.corners().unwrap() {
                     let point = KinematicBody::point(corner, self.motion);
                     if let Some(collision) = point.collision(other) {
                         let distance = collision.position.distance(corner);
