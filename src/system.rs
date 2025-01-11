@@ -63,6 +63,12 @@ impl Plugin for CollisionPlugin {
     }
 }
 
+fn are_opposite(v1: Vec2, v2: Vec2) -> bool {
+    const TOLERANCE: f32 = 1e-6; // Small tolerance for floating-point precision
+    let dot_product = v1.normalize_or_zero().dot(v2.normalize_or_zero());
+    (dot_product + 1.0).abs() < TOLERANCE
+}
+
 pub fn detect_collisions(
     query: Query<(Entity, &KinematicBody)>,
     config: Res<CollisionConfig>,
@@ -88,10 +94,18 @@ pub fn detect_collisions(
                     return;
                 }
                 if let Some(collision) = k1.collision(k2) {
+                    println!(
+                        "cp: {:?}, cm: {:?}, k1: {:?}, k2: {:?}, m: {:?}",
+                        collision.position, collision.motion, k1.position, k2.position, k1.motion
+                    );
                     gizmos.circle_2d(collision.position, 5., Srgba::BLUE);
                     let motion_1 = collision.motion;
                     let distance_1 = motion_1.length();
-                    if distance_1 < min_distance_1 {
+                    if distance_1 < min_distance_1 || are_opposite(collision.motion, k1.motion) {
+                        println!(
+                            "{:?}, {:?}, {:?}, {:?}",
+                            distance_1, min_distance_1, motion_1, min_motion_1
+                        );
                         min_distance_1 = distance_1;
                         min_motion_1 = motion_1;
                     }
@@ -112,6 +126,7 @@ pub fn apply_motion(
         let Ok((mut t, mut kb)) = query.get_mut(e) else {
             continue;
         };
+        println!("{:?}", m);
         t.translation += m.extend(0.);
         kb.position = t.translation.truncate();
         kb.motion = Vec2::ZERO;
