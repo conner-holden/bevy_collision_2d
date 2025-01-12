@@ -47,7 +47,8 @@ fn main() {
     }))
     .add_plugins(CollisionPlugin {
         chunk_size: TILE_SIZE,
-        debug: true,
+        enable_debug: true,
+        ..Default::default()
     })
     .add_systems(Startup, setup)
     .add_systems(Update, movement.in_set(Kinematics::Motion))

@@ -1,20 +1,14 @@
 ### Bevy Collision 2D
 
-A simple Bevy library designed for 2D kinematic-/rigid-body collision. Support is only planned for points and AABBs. Uses `glam` vector types like Bevy does.
+A simple Bevy library designed for 2D kinematic-body collision. Support is only planned for points and AABBs. Uses `glam` vector types like Bevy does.
 
-### Supported Collisions
+### Supported Functionality
 
-| Body 1  | Body 2          | Supported |
-| ------- | --------------- | --------- |
-| `Point` | `Point`         | &#x2611;  |
-| `Point` | `Aabb`          | &#x2611;  |
-| `Point` | `Aabb` (moving) | &#x2610;  |
-| `Aabb`  | `Aabb` (moving) | &#x2610;  |
-| `Aabb`  | `Point`         | &#x2610;  |
+See the [pinned issue](https://github.com/cloud303-cholden/bevy-collision-2d/issues/1) for current progress in planned functionality.
 
 ### Usage
 
-This library is designed to be as simple as possible. Take note that AABB representation is different than other libraries. Below is an example:
+This library is designed to be as simple as possible. Take note that AABB representation is different than other libraries. Below is an example of how collision is detected:
 
 ```rs
 use bevy_collision_2d::prelude::*;
