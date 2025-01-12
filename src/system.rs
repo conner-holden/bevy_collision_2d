@@ -94,18 +94,18 @@ pub fn detect_collisions(
                     return;
                 }
                 if let Some(collision) = k1.collision(k2) {
-                    println!(
-                        "cp: {:?}, cm: {:?}, k1: {:?}, k2: {:?}, m: {:?}",
-                        collision.position, collision.motion, k1.position, k2.position, k1.motion
-                    );
+                    // println!(
+                    //     "cp: {:?}, cm: {:?}, k1: {:?}, k2: {:?}, m: {:?}",
+                    //     collision.position, collision.motion, k1.position, k2.position, k1.motion
+                    // );
                     gizmos.circle_2d(collision.position, 5., Srgba::BLUE);
                     let motion_1 = collision.motion;
                     let distance_1 = motion_1.length();
                     if distance_1 < min_distance_1 || are_opposite(collision.motion, k1.motion) {
-                        println!(
-                            "{:?}, {:?}, {:?}, {:?}",
-                            distance_1, min_distance_1, motion_1, min_motion_1
-                        );
+                        // println!(
+                        //     "{:?}, {:?}, {:?}, {:?}",
+                        //     distance_1, min_distance_1, motion_1, min_motion_1
+                        // );
                         min_distance_1 = distance_1;
                         min_motion_1 = motion_1;
                     }
@@ -126,7 +126,7 @@ pub fn apply_motion(
         let Ok((mut t, mut kb)) = query.get_mut(e) else {
             continue;
         };
-        println!("{:?}", m);
+        // println!("{:?}", m);
         t.translation += m.extend(0.);
         kb.position = t.translation.truncate();
         kb.motion = Vec2::ZERO;

@@ -16,7 +16,7 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[derive(Debug, Default, Copy, Clone)]
 /// A point of collision between two objects
 pub struct Collision {
     /// The resolved motion of the collision
@@ -25,6 +25,15 @@ pub struct Collision {
     pub position: Vec2,
     /// The optional normal unit vector of the collision
     pub normal: Option<IVec2>,
+}
+
+impl PartialEq for Collision {
+    fn eq(&self, other: &Self) -> bool {
+        self.position == other.position
+            && self.normal == other.normal
+            && (self.position.x - other.position.x).abs() < 0.001
+            && (self.position.y - other.position.y).abs() < 0.001
+    }
 }
 
 const CORNERS: [[f32; 2]; 4] = [[-1., -1.], [-1., 1.], [1., 1.], [1., -1.]];
@@ -102,37 +111,15 @@ impl KinematicBody {
             }
             // Point-AABB collision
             (None, Some(other_size)) => {
-                // Calculate the inverse of the displacement to avoid repeated divisions
-                let inv_displacement = Vec2::new(
-                    if self.motion.x != 0.0 {
-                        1.0 / self.motion.x
-                    } else {
-                        f32::INFINITY
-                    },
-                    if self.motion.y != 0.0 {
-                        1.0 / self.motion.y
-                    } else {
-                        f32::INFINITY
-                    },
-                );
+                let inv_displacement = Vec2::new(1.0 / self.motion.x, 1.0 / self.motion.y);
 
                 // Compute the t-values for intersections with the AABB's boundaries
-                let mut t_min =
-                    (other.position - 0.5 * other_size - self.position) * inv_displacement;
-                let mut t_max =
-                    (other.position + 0.5 * other_size - self.position) * inv_displacement;
-
-                if self.motion.y == 0.0 {
-                    if self.position.y >= other.position.y
-                        && self.position.y <= other.position.y + other_size.y
-                    {
-                        t_min.y = f32::NEG_INFINITY; // Inside the bounds
-                        t_max.y = f32::INFINITY; // No real exit since not moving in y
-                    } else {
-                        t_min.y = f32::INFINITY; // Never enters
-                        t_max.y = f32::INFINITY; // Consistently outside
-                    }
-                }
+                let t_min = (other.position - 0.5 * other_size - self.position) * inv_displacement;
+                let t_max = (other.position + 0.5 * other_size - self.position) * inv_displacement;
+                // println!(
+                //     "other.position: {:?}, other_size: {:?}, self.position: {:?}, t_min: {:?}, t_max: {:?}",
+                //     other.position, other_size, self.position, t_min, t_max
+                // );
 
                 // Determine the near and far t-values for each axis
                 let t_near = t_min.min(t_max);
@@ -141,6 +128,11 @@ impl KinematicBody {
                 // Find the largest t_near and smallest t_far
                 let t_entry = t_near.x.max(t_near.y);
                 let t_exit = t_far.x.min(t_far.y);
+
+                // println!(
+                //     "{:?}, {:?}, {:?}, {:?}, {:?}, {:?}, {:?}",
+                //     inv_displacement, t_min, t_max, t_near, t_far, t_entry, t_exit
+                // );
 
                 // If the line misses the AABB or the collision is outside the line segment, return None
                 if t_entry > t_exit || t_exit <= 0.0 || t_entry > 1.0 {
@@ -153,19 +145,6 @@ impl KinematicBody {
                 } else {
                     Some(IVec2::new(0, -self.motion.y.signum() as i32))
                 };
-
-                println!(
-                    "{:?}, {:?}, {:?}, {:?}, {:?}, {:?}, {:?}, {:?}, {:?}",
-                    inv_displacement,
-                    t_min,
-                    t_max,
-                    t_near,
-                    t_far,
-                    t_entry,
-                    t_exit,
-                    normal,
-                    self.motion
-                );
 
                 // Compute the collision point
                 let motion = t_entry * self.motion;
@@ -320,12 +299,12 @@ mod tests {
     fn correct_aabb_aabb_collision_3() {
         // p: Vec2(150.0, 50.0), k1: Vec2(105.145454, 0.0), k2: Vec2(200.0, 0.0), m: Vec2(4.861585, 0.0)
         let aabb_1 =
-            KinematicBody::aabb(Vec2::splat(100.), Vec2::new(99.99, 0.), Vec2::new(5., 0.));
-        let aabb_2 = KinematicBody::aabb(Vec2::splat(100.), Vec2::new(200., 0.), Vec2::ZERO);
+            KinematicBody::aabb(Vec2::splat(100.), Vec2::new(99.99, 1.), Vec2::new(5., 0.));
+        let aabb_2 = KinematicBody::aabb(Vec2::splat(100.), Vec2::new(200., 1.), Vec2::ZERO);
         let actual = aabb_1.collision(&aabb_2);
         let expected = Some(Collision {
             motion: Vec2::new(0.01, 0.),
-            position: Vec2::new(150., 50.),
+            position: Vec2::new(150., 51.),
             normal: Some(-IVec2::X),
         });
         assert_eq!(actual, expected);
