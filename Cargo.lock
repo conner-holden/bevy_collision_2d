@@ -317,6 +317,8 @@ dependencies = [
  "bevy_app",
  "bevy_color",
  "bevy_ecs",
+ "bevy_eventlistener",
+ "bevy_eventlistener_derive",
  "bevy_gizmos",
  "bevy_hierarchy",
  "bevy_math",
@@ -587,6 +589,28 @@ checksum = "46db3d4ebc2ab23045a7d32fa1afb4be78894ec3fbe2f52b28f6cd6e4011e400"
 dependencies = [
  "bevy_macro_utils",
  "encase_derive_impl",
+]
+
+[[package]]
+name = "bevy_eventlistener"
+version = "0.9.0"
+source = "git+https://github.com/NthTensor/bevy_eventlistener?branch=main#d7b695559dddeb086b144f29099bae222690d16f"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_eventlistener_derive",
+ "bevy_hierarchy",
+ "bevy_utils",
+]
+
+[[package]]
+name = "bevy_eventlistener_derive"
+version = "0.9.0"
+source = "git+https://github.com/NthTensor/bevy_eventlistener?branch=main#d7b695559dddeb086b144f29099bae222690d16f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

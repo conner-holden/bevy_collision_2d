@@ -2,15 +2,20 @@ use bevy_app::{App, Plugin, Startup, Update};
 use bevy_color::Srgba;
 use bevy_ecs::{
     entity::Entity,
+    event::{Event, EventWriter},
     schedule::{IntoSystemConfigs, SystemSet},
     system::{Commands, In, IntoSystem, Query, Res, Resource},
 };
+use bevy_eventlistener::prelude::*;
 use bevy_gizmos::gizmos::Gizmos;
 use bevy_transform::components::Transform;
 use bevy_ui::{widget::Text, Node, Val};
 use glam::Vec2;
 
-use crate::{kinematics::KinematicBody, utils::chunk_map::ChunkMap};
+use crate::{
+    kinematics::{Collision, KinematicBody},
+    utils::chunk_map::ChunkMap,
+};
 
 #[derive(SystemSet, Hash, Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Kinematics {
@@ -22,19 +27,22 @@ pub enum Kinematics {
 #[derive(Resource)]
 pub struct CollisionConfig {
     pub chunk_size: f32,
-    pub debug: bool,
+    pub enable_debug: bool,
+    pub enable_collision_effects: bool,
 }
 
 pub struct CollisionPlugin {
     pub chunk_size: f32,
-    pub debug: bool,
+    pub enable_debug: bool,
+    pub enable_collision_effects: bool,
 }
 
 impl Default for CollisionPlugin {
     fn default() -> Self {
         Self {
             chunk_size: 1.,
-            debug: false,
+            enable_debug: false,
+            enable_collision_effects: false,
         }
     }
 }
@@ -43,7 +51,8 @@ impl Plugin for CollisionPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(CollisionConfig {
             chunk_size: self.chunk_size,
-            debug: self.debug,
+            enable_debug: self.enable_debug,
+            enable_collision_effects: self.enable_collision_effects,
         })
         .add_systems(
             Update,
@@ -53,14 +62,25 @@ impl Plugin for CollisionPlugin {
                 .in_set(Kinematics::Collision),
         );
 
-        if self.debug {
+        if self.enable_debug {
             app.add_systems(Startup, setup_screen_diagnostics)
                 .add_systems(
                     Update,
                     (draw_debug_rects, draw_screen_diagnostics).after(Kinematics::Effect),
                 );
         }
+
+        if self.enable_collision_effects {
+            app.add_plugins(EventListenerPlugin::<CollisionEffect>::default());
+        }
     }
+}
+
+#[derive(Event, Clone, Debug, EntityEvent)]
+pub struct CollisionEffect {
+    #[target]
+    pub entity: Entity,
+    pub collision: Collision,
 }
 
 fn are_opposite(v1: Vec2, v2: Vec2) -> bool {
@@ -72,6 +92,7 @@ fn are_opposite(v1: Vec2, v2: Vec2) -> bool {
 pub fn detect_collisions(
     query: Query<(Entity, &KinematicBody)>,
     config: Res<CollisionConfig>,
+    mut effects: EventWriter<CollisionEffect>,
     mut gizmos: Gizmos,
 ) -> Vec<(Entity, Vec2)> {
     let mut chunks = ChunkMap::new(0, config.chunk_size);
@@ -89,6 +110,7 @@ pub fn detect_collisions(
                 continue;
             }
             let mut min_distance_1 = min_motion_1.length();
+            let mut min_collision = None;
             chunks.iter_neighbors(*id1, |_id2, (e2, k2)| {
                 if e1 == e2 {
                     return;
@@ -108,10 +130,19 @@ pub fn detect_collisions(
                         // );
                         min_distance_1 = distance_1;
                         min_motion_1 = motion_1;
+                        min_collision = Some(collision);
                     }
                 }
             });
-            solutions.push((*e1, min_motion_1))
+            solutions.push((*e1, min_motion_1));
+            if config.enable_collision_effects {
+                if let Some(collision) = min_collision {
+                    effects.send(CollisionEffect {
+                        entity: *e1,
+                        collision,
+                    });
+                }
+            }
         }
     }
 

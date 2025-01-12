@@ -5,6 +5,6 @@ pub mod utils;
 pub mod prelude {
     pub use super::{
         kinematics::{Collision, Flags, KinematicBody},
-        system::{CollisionPlugin, Kinematics},
+        system::{CollisionEffect, CollisionPlugin, Kinematics},
     };
 }

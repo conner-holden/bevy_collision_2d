@@ -1,5 +1,6 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_collision_2d::prelude::*;
+use bevy_eventlistener::prelude::*;
 use glam::Vec2;
 use rand::Rng;
 
@@ -47,7 +48,8 @@ fn main() {
     }))
     .add_plugins(CollisionPlugin {
         chunk_size: TILE_SIZE,
-        debug: true,
+        enable_debug: true,
+        enable_collision_effects: true,
     })
     .add_systems(Startup, setup)
     .add_systems(Update, spawn_projectile)
@@ -88,13 +90,14 @@ pub fn spawn_projectile(mut commands: Commands) {
     let size = Vec2::splat(TILE_SIZE / 5.);
     commands.spawn((
         Sprite {
-            color: Color::srgb(100., 100., 100.),
+            color: Color::WHITE,
             custom_size: Some(size),
             ..Default::default()
         },
         Transform::from_xyz(position.x, position.y, 0.),
         Projectile { direction },
         KinematicBody::aabb(size, position, Vec2::ZERO),
+        On::<CollisionEffect>::run(listen_collision_effects),
     ));
 }
 
@@ -102,5 +105,29 @@ pub fn movement(time: Res<Time>, mut query: Query<(&mut KinematicBody, &Projecti
     let t = time.delta_secs();
     for (mut k, p) in &mut query {
         k.motion = p.direction * TILE_SIZE * PROJECTILE_SPEED * t;
+    }
+}
+
+pub fn listen_collision_effects(
+    mut commands: Commands,
+    mut query: Query<(&mut Projectile, &mut Sprite)>,
+    event: Listener<CollisionEffect>,
+) {
+    if let Ok((mut projectile, mut sprite)) = query.get_mut(event.entity) {
+        if let Some(normal) = event.collision.normal {
+            // Projectile should rebound in the axis of the collision normal.
+            if normal.x != 0 {
+                projectile.direction.x *= -1.;
+            } else {
+                projectile.direction.y *= -1.;
+            }
+            // First collision should change the projectile to be black.
+            // Second collision should despawn it.
+            if sprite.color == Color::WHITE {
+                sprite.color = Color::BLACK;
+            } else {
+                commands.entity(event.entity).despawn_recursive();
+            }
+        }
     }
 }
