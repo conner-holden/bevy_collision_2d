@@ -48,6 +48,10 @@ pub struct KinematicBody {
 }
 
 impl KinematicBody {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn point(position: Vec2, motion: Vec2) -> Self {
         Self {
             position,
@@ -63,6 +67,21 @@ impl KinematicBody {
             motion,
             ..Default::default()
         }
+    }
+
+    pub fn size(mut self, size: Vec2) -> Self {
+        self.size = Some(size);
+        self
+    }
+
+    pub fn position(mut self, position: Vec2) -> Self {
+        self.position = position;
+        self
+    }
+
+    pub fn motion(mut self, motion: Vec2) -> Self {
+        self.motion = motion;
+        self
     }
 
     pub fn corners(&self) -> Option<[Vec2; 4]> {
@@ -298,13 +317,15 @@ mod tests {
     #[test]
     fn correct_aabb_aabb_collision_3() {
         // p: Vec2(150.0, 50.0), k1: Vec2(105.145454, 0.0), k2: Vec2(200.0, 0.0), m: Vec2(4.861585, 0.0)
-        let aabb_1 =
-            KinematicBody::aabb(Vec2::splat(100.), Vec2::new(99.99, 1.), Vec2::new(5., 0.));
-        let aabb_2 = KinematicBody::aabb(Vec2::splat(100.), Vec2::new(200., 1.), Vec2::ZERO);
+        let aabb_1 = KinematicBody::new()
+            .size(Vec2::splat(100.))
+            .position(Vec2::new(99.99, 0.))
+            .motion(Vec2::new(5., 0.));
+        let aabb_2 = KinematicBody::aabb(Vec2::splat(100.), Vec2::new(200., 0.), Vec2::ZERO);
         let actual = aabb_1.collision(&aabb_2);
         let expected = Some(Collision {
             motion: Vec2::new(0.01, 0.),
-            position: Vec2::new(150., 51.),
+            position: Vec2::new(150., 50.),
             normal: Some(-IVec2::X),
         });
         assert_eq!(actual, expected);
