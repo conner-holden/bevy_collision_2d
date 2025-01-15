@@ -120,7 +120,9 @@ pub fn detect_collisions(
                     //     "cp: {:?}, cm: {:?}, k1: {:?}, k2: {:?}, m: {:?}",
                     //     collision.position, collision.motion, k1.position, k2.position, k1.motion
                     // );
-                    gizmos.circle_2d(collision.position, 5., Srgba::BLUE);
+                    if config.enable_debug {
+                        gizmos.circle_2d(collision.position, config.chunk_size / 20., Srgba::BLUE);
+                    }
                     let motion_1 = collision.motion;
                     let distance_1 = motion_1.length();
                     if distance_1 < min_distance_1 || are_opposite(collision.motion, k1.motion) {
