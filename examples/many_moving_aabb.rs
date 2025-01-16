@@ -62,6 +62,9 @@ pub struct Projectile {
     pub direction: Vec2,
 }
 
+#[derive(Component)]
+pub struct Wall;
+
 pub fn setup(mut commands: Commands) {
     commands.spawn(Camera2d::default());
 
@@ -74,6 +77,7 @@ pub fn setup(mut commands: Commands) {
                 custom_size: Some(size),
                 ..Default::default()
             },
+            Wall,
             Transform::from_xyz(position.x, position.y, -1.),
             KinematicBody::aabb(size, position, Vec2::ZERO),
         ));
@@ -110,10 +114,14 @@ pub fn movement(time: Res<Time>, mut query: Query<(&mut KinematicBody, &Projecti
 
 pub fn listen_collision_effects(
     mut commands: Commands,
-    mut query: Query<(&mut Projectile, &mut Sprite)>,
+    mut walls: Query<&mut Sprite, (With<Wall>, Without<Projectile>)>,
+    mut projectiles: Query<(&mut Projectile, &mut Sprite), Without<Wall>>,
     event: Listener<CollisionEffect>,
 ) {
-    if let Ok((mut projectile, mut sprite)) = query.get_mut(event.entity) {
+    if let Ok((mut projectile, mut sprite)) = projectiles.get_mut(event.entity_1) {
+        if let Ok(mut wall_sprite) = walls.get_mut(event.entity_2) {
+            wall_sprite.color = Color::WHITE;
+        }
         if let Some(normal) = event.collision.normal {
             // Projectile should rebound in the axis of the collision normal.
             if normal.x != 0 {
@@ -126,7 +134,7 @@ pub fn listen_collision_effects(
             if sprite.color == Color::WHITE {
                 sprite.color = Color::BLACK;
             } else {
-                commands.entity(event.entity).despawn_recursive();
+                commands.entity(event.entity_1).despawn_recursive();
             }
         }
     }

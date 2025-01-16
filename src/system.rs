@@ -76,7 +76,8 @@ impl Plugin for CollisionPlugin {
 #[derive(Event, Clone, Debug, EntityEvent)]
 pub struct CollisionEffect {
     #[target]
-    pub entity: Entity,
+    pub entity_1: Entity,
+    pub entity_2: Entity,
     pub collision: Collision,
 }
 
@@ -108,6 +109,7 @@ pub fn detect_collisions(
             }
             let mut min_distance_1 = min_motion_1.length();
             let mut min_collision = None;
+            let mut min_entity = None;
             chunks.iter_neighbors(*id1, |_id2, (e2, k2)| {
                 if e1 == e2 {
                     return;
@@ -130,6 +132,7 @@ pub fn detect_collisions(
                         min_distance_1 = distance_1;
                         min_motion_1 = motion_1;
                         min_collision = Some(collision);
+                        min_entity = Some(*e2);
                     }
                 }
             });
@@ -137,7 +140,8 @@ pub fn detect_collisions(
             if config.enable_collision_effects {
                 if let Some(collision) = min_collision {
                     effects.send(CollisionEffect {
-                        entity: *e1,
+                        entity_1: *e1,
+                        entity_2: min_entity.unwrap(),
                         collision,
                     });
                 }
