@@ -60,7 +60,8 @@ impl Plugin for CollisionPlugin {
                 .pipe(apply_motion)
                 .after(Kinematics::Motion)
                 .in_set(Kinematics::Collision),
-        );
+        )
+        .add_plugins(EventListenerPlugin::<CollisionEffect>::default());
 
         if self.enable_debug {
             app.add_systems(Startup, setup_screen_diagnostics)
@@ -68,10 +69,6 @@ impl Plugin for CollisionPlugin {
                     Update,
                     (draw_debug_rects, draw_screen_diagnostics).after(Kinematics::Effect),
                 );
-        }
-
-        if self.enable_collision_effects {
-            app.add_plugins(EventListenerPlugin::<CollisionEffect>::default());
         }
     }
 }
