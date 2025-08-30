@@ -87,19 +87,19 @@ impl KinematicBody {
     pub fn corners(&self) -> Option<[Vec2; 4]> {
         if let Some(size) = self.size {
             let half_size = size * 0.5;
-            return Some([
+            Some([
                 self.position + half_size * Vec2::from(CORNERS[0]),
                 self.position + half_size * Vec2::from(CORNERS[1]),
                 self.position + half_size * Vec2::from(CORNERS[2]),
                 self.position + half_size * Vec2::from(CORNERS[3]),
-            ]);
+            ])
         } else {
-            return None;
+            None
         }
     }
 
     pub fn collision(&self, other: &Self) -> Option<Collision> {
-        let result = match (self.size, other.size) {
+        match (self.size, other.size) {
             // Point-point collision
             (None, None) => {
                 let cross = self.motion.perp_dot(other.motion);
@@ -113,11 +113,7 @@ impl KinematicBody {
                 let other_ratio = pos_displacement.perp_dot(self.motion) / cross;
 
                 // Check if the collision point lies on both line segments
-                if self_ratio >= 0.0
-                    && self_ratio <= 1.0
-                    && other_ratio >= 0.0
-                    && other_ratio <= 1.0
-                {
+                if (0.0..=1.0).contains(&self_ratio) && (0.0..1.0).contains(&other_ratio) {
                     let motion = self_ratio * self.motion;
                     Some(Collision {
                         motion,
@@ -192,12 +188,11 @@ impl KinematicBody {
                         }
                     }
                 }
-                return min_collision;
+                min_collision
             }
             // TODO: AABB-point collision
             _ => None,
-        };
-        return result;
+        }
     }
 }
 

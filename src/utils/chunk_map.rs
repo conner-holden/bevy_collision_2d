@@ -24,16 +24,16 @@ pub struct ChunkId {
 
 impl From<Vec2> for ChunkId {
     fn from(position: Vec2) -> Self {
-        return Self {
+        Self {
             x: position.x.floor() as i32,
             y: position.y.floor() as i32,
-        };
+        }
     }
 }
 
-impl Into<Vec2> for ChunkId {
-    fn into(self) -> Vec2 {
-        return Vec2::new(self.x as f32, self.y as f32);
+impl From<ChunkId> for Vec2 {
+    fn from(value: ChunkId) -> Self {
+        Vec2::new(value.x as f32, value.y as f32)
     }
 }
 
@@ -45,10 +45,10 @@ pub struct ChunkMap<T: std::fmt::Debug> {
 
 impl<T: std::fmt::Debug> ChunkMap<T> {
     pub fn new(capacity: usize, chunk_size: f32) -> Self {
-        return Self {
+        Self {
             map: HashMap::with_capacity(capacity),
             chunk_size: Vec2::splat(chunk_size),
-        };
+        }
     }
 
     pub fn insert(&mut self, position: Vec2, value: T) {
@@ -78,7 +78,7 @@ impl<T: std::fmt::Debug> ChunkMap<T> {
             self.map.remove(&id);
         }
 
-        return value;
+        value
     }
 
     pub fn iter_neighbors<F: FnMut(ChunkId, &T)>(&self, center: ChunkId, mut f: F) {

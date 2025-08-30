@@ -2,11 +2,10 @@ use bevy_app::{App, Plugin, Startup, Update};
 use bevy_color::Srgba;
 use bevy_ecs::{
     entity::Entity,
-    event::{Event, EventWriter},
+    event::Event,
     schedule::{IntoSystemConfigs, SystemSet},
     system::{Commands, In, IntoSystem, Query, Res, Resource},
 };
-use bevy_eventlistener::prelude::*;
 use bevy_gizmos::gizmos::Gizmos;
 use bevy_transform::components::Transform;
 use bevy_ui::{widget::Text, Node, Val};
@@ -60,8 +59,7 @@ impl Plugin for CollisionPlugin {
                 .pipe(apply_motion)
                 .after(Kinematics::Motion)
                 .in_set(Kinematics::Collision),
-        )
-        .add_plugins(EventListenerPlugin::<CollisionEffect>::default());
+        );
 
         if self.enable_debug {
             app.add_systems(Startup, setup_screen_diagnostics)
@@ -73,11 +71,9 @@ impl Plugin for CollisionPlugin {
     }
 }
 
-#[derive(Event, Clone, Debug, EntityEvent)]
+#[derive(Event, Clone, Debug)]
 pub struct CollisionEffect {
-    #[target]
-    pub entity_1: Entity,
-    pub entity_2: Entity,
+    pub other: Entity,
     pub collision: Collision,
 }
 
@@ -88,9 +84,9 @@ fn are_opposite(v1: Vec2, v2: Vec2) -> bool {
 }
 
 pub fn detect_collisions(
+    mut commands: Commands,
     query: Query<(Entity, &KinematicBody)>,
     config: Res<CollisionConfig>,
-    mut effects: EventWriter<CollisionEffect>,
     mut gizmos: Gizmos,
 ) -> Vec<(Entity, Vec2)> {
     let mut chunks = ChunkMap::new(0, config.chunk_size);
@@ -139,17 +135,19 @@ pub fn detect_collisions(
             solutions.push((*e1, min_motion_1));
             if config.enable_collision_effects {
                 if let Some(collision) = min_collision {
-                    effects.send(CollisionEffect {
-                        entity_1: *e1,
-                        entity_2: min_entity.unwrap(),
-                        collision,
-                    });
+                    commands.trigger_targets(
+                        CollisionEffect {
+                            other: min_entity.unwrap(),
+                            collision,
+                        },
+                        *e1,
+                    );
                 }
             }
         }
     }
 
-    return solutions;
+    solutions
 }
 
 pub fn apply_motion(

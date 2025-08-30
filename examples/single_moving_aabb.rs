@@ -59,7 +59,7 @@ fn main() {
 pub struct Player;
 
 pub fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d::default());
+    commands.spawn(Camera2d);
 
     let position = Vec2::new(PLAYER_POSITION.0 as f32, PLAYER_POSITION.1 as f32) * TILE_SIZE;
     commands.spawn((

@@ -1,6 +1,5 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_collision_2d::prelude::*;
-use bevy_eventlistener::prelude::*;
 use glam::Vec2;
 use rand::Rng;
 
@@ -66,7 +65,7 @@ pub struct Projectile {
 pub struct Wall;
 
 pub fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d::default());
+    commands.spawn(Camera2d);
 
     for (x, y) in WALL_POSITIONS {
         let size = Vec2::splat(TILE_SIZE);
@@ -92,17 +91,18 @@ pub fn spawn_projectile(mut commands: Commands) {
         PROJECTILE_SPAWN_POSITION.1 as f32,
     ) * TILE_SIZE;
     let size = Vec2::splat(TILE_SIZE / 5.);
-    commands.spawn((
-        Sprite {
-            color: Color::WHITE,
-            custom_size: Some(size),
-            ..Default::default()
-        },
-        Transform::from_xyz(position.x, position.y, 0.),
-        Projectile { direction },
-        KinematicBody::aabb(size, position, Vec2::ZERO),
-        On::<CollisionEffect>::run(listen_collision_effects),
-    ));
+    commands
+        .spawn((
+            Sprite {
+                color: Color::WHITE,
+                custom_size: Some(size),
+                ..Default::default()
+            },
+            Transform::from_xyz(position.x, position.y, 0.),
+            Projectile { direction },
+            KinematicBody::aabb(size, position, Vec2::ZERO),
+        ))
+        .observe(listen_collision_effects);
 }
 
 pub fn movement(time: Res<Time>, mut query: Query<(&mut KinematicBody, &Projectile)>) {
@@ -113,16 +113,17 @@ pub fn movement(time: Res<Time>, mut query: Query<(&mut KinematicBody, &Projecti
 }
 
 pub fn listen_collision_effects(
+    trigger: Trigger<CollisionEffect>,
     mut commands: Commands,
     mut walls: Query<&mut Sprite, (With<Wall>, Without<Projectile>)>,
     mut projectiles: Query<(&mut Projectile, &mut Sprite), Without<Wall>>,
-    event: Listener<CollisionEffect>,
 ) {
-    if let Ok((mut projectile, mut sprite)) = projectiles.get_mut(event.entity_1) {
-        if let Ok(mut wall_sprite) = walls.get_mut(event.entity_2) {
+    let target = trigger.entity();
+    if let Ok((mut projectile, mut sprite)) = projectiles.get_mut(target) {
+        if let Ok(mut wall_sprite) = walls.get_mut(trigger.other) {
             wall_sprite.color = Color::WHITE;
         }
-        if let Some(normal) = event.collision.normal {
+        if let Some(normal) = trigger.collision.normal {
             // Projectile should rebound in the axis of the collision normal.
             if normal.x != 0 {
                 projectile.direction.x *= -1.;
@@ -134,7 +135,7 @@ pub fn listen_collision_effects(
             if sprite.color == Color::WHITE {
                 sprite.color = Color::BLACK;
             } else {
-                commands.entity(event.entity_1).despawn_recursive();
+                commands.entity(target).despawn_recursive();
             }
         }
     }

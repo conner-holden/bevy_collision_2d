@@ -7,8 +7,6 @@ edition = "2021"
 bevy_app = "0.15.1"
 bevy_color = "0.15.2"
 bevy_ecs = "0.15.1"
-bevy_eventlistener = { git = "https://github.com/NthTensor/bevy_eventlistener", branch = "main" }
-bevy_eventlistener_derive = { git = "https://github.com/NthTensor/bevy_eventlistener", branch = "main" }
 bevy_gizmos = "0.15.1"
 bevy_hierarchy = "0.15.1"
 bevy_math = "0.15.1"
