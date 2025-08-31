@@ -1,7 +1,7 @@
 // Adapted from https://github.com/Aunmag/shooter-rs
 
-use bevy_utils::HashMap;
-use glam::Vec2;
+use bevy_math::Vec2;
+use bevy_platform::collections::HashMap;
 
 #[rustfmt::skip]
 const OFFSETS: &[(i32, i32)] = &[

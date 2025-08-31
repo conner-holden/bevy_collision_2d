@@ -3,13 +3,14 @@ use bevy_color::Srgba;
 use bevy_ecs::{
     entity::Entity,
     event::Event,
-    schedule::{IntoSystemConfigs, SystemSet},
-    system::{Commands, In, IntoSystem, Query, Res, Resource},
+    resource::Resource,
+    schedule::{IntoScheduleConfigs, SystemSet},
+    system::{Commands, In, IntoSystem, Query, Res},
 };
 use bevy_gizmos::gizmos::Gizmos;
+use bevy_math::Vec2;
 use bevy_transform::components::Transform;
 use bevy_ui::{widget::Text, Node, Val};
-use glam::Vec2;
 
 use crate::{
     kinematics::{Collision, KinematicBody},

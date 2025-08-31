@@ -1,6 +1,5 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_collision_2d::prelude::*;
-use glam::Vec2;
 use rand::Rng;
 
 const TILE_SIZE: f32 = 100.;
@@ -118,7 +117,7 @@ pub fn listen_collision_effects(
     mut walls: Query<&mut Sprite, (With<Wall>, Without<Projectile>)>,
     mut projectiles: Query<(&mut Projectile, &mut Sprite), Without<Wall>>,
 ) {
-    let target = trigger.entity();
+    let target = trigger.target();
     if let Ok((mut projectile, mut sprite)) = projectiles.get_mut(target) {
         if let Ok(mut wall_sprite) = walls.get_mut(trigger.other) {
             wall_sprite.color = Color::WHITE;
@@ -135,7 +134,7 @@ pub fn listen_collision_effects(
             if sprite.color == Color::WHITE {
                 sprite.color = Color::BLACK;
             } else {
-                commands.entity(target).despawn_recursive();
+                commands.entity(target).despawn();
             }
         }
     }

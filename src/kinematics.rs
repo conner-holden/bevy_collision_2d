@@ -1,6 +1,6 @@
 use bevy_ecs::component::Component;
+use bevy_math::{IVec2, Vec2};
 use bitflags::bitflags;
-use glam::{IVec2, Vec2};
 
 bitflags! {
     #[derive(Clone, Copy, Debug, Default)]
@@ -198,8 +198,6 @@ impl KinematicBody {
 
 #[cfg(test)]
 mod tests {
-    use glam::{IVec2, Vec2};
-
     use super::*;
 
     // #[test]

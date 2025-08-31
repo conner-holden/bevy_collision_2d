@@ -1,6 +1,5 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_collision_2d::prelude::*;
-use glam::Vec2;
 
 const TILE_SIZE: f32 = 100.;
 const PLAYER_SPEED: f32 = 3.;
